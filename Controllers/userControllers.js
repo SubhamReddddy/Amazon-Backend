@@ -557,8 +557,8 @@ export const payment = catchAsyncError(async (req, res, next) => {
     customer: customer.id, // Associate session with customer
     line_items,
     mode: "payment",
-    success_url: "http://192.168.172.113:5173/payment/success",
-    cancel_url: "http://192.168.168.113:5173/product/cart",
+    success_url: `${process.env.FRONTEND}/payment/success`,
+    cancel_url: `${process.env.FRONTEND}/product/cart`,
   });
 
   // create order in database
