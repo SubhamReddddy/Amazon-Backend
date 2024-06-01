@@ -557,8 +557,8 @@ export const payment = catchAsyncError(async (req, res, next) => {
     customer: customer.id, // Associate session with customer
     line_items,
     mode: "payment",
-    success_url: "http://192.168.172.113:5173/payment/success",
-    cancel_url: "http://192.168.168.113:5173/product/cart",
+    success_url: `${process.env.FRONTEND}/payment/success`,
+    cancel_url: `${process.env.FRONTEND}/product/cart`,
   });
 
   // create order in database
@@ -638,6 +638,7 @@ export const paymentStatus = catchAsyncError(async (req, res, next) => {
     products.forEach(async (element) => {
       const product = await ProductModel.findById({ _id: element.productId });
       product.productStock = product.productStock - element.quantity;
+      product.sells = product.sells + element.quantity;
       await product.save();
     });
   }
@@ -766,5 +767,115 @@ export const AddReview = catchAsyncError(async (req, res, next) => {
     success: true,
     message: "Review Added Successfully",
     product,
+  });
+});
+
+export const latestProducts = catchAsyncError(async (req, res, next) => {
+  const thisMonthEnd = new Date();
+  const thisMonthStart = new Date(
+    thisMonthEnd.getFullYear(),
+    thisMonthEnd.getMonth(),
+    1
+  );
+
+  const products = await ProductModel.find({
+    createdAt: {
+      $gte: thisMonthStart,
+      $lte: thisMonthEnd,
+    },
+  });
+
+  res.status(200).json({
+    success: true,
+    products,
+  });
+});
+
+export const mostSellProducts = catchAsyncError(async (req, res, next) => {
+  const products = await ProductModel.find({}).sort({ sells: -1 }).limit(10);
+  res.status(200).json({
+    success: true,
+    products,
+  });
+});
+
+export const womensProduct = catchAsyncError(async (req, res, next) => {
+  const products = await ProductModel.find({
+    productName: {
+      $regex: "women",
+      $options: "i",
+    },
+  });
+  res.status(200).json({
+    success: true,
+    products,
+  });
+});
+
+export const mensProduct = catchAsyncError(async (req, res, next) => {
+  const products = await ProductModel.find({
+    productName: {
+      $regex: "\\bmen\\b",
+      $options: "i",
+    },
+  });
+  res.status(200).json({
+    success: true,
+    products,
+  });
+});
+
+export const addToWish = catchAsyncError(async (req, res, next) => {
+  const { id } = req.params;
+  const product = await ProductModel.findById({ _id: id }).select("_id");
+  const user = await userModel.findById({ _id: req.user._id });
+  if (!product) {
+    return next(new ErrorHandler("Product not found", 404));
+  }
+
+  if (user.wishes.length > 0) {
+    const index = user.wishes.findIndex((wish) => wish.productId.equals(id));
+    if (index !== -1) {
+      user.wishes.splice(index, 1);
+      await user.save();
+      res.status(200).json({
+        success: true,
+        message: "Product Removed from wishlist",
+        user,
+      });
+    } else {
+      user.wishes.push({ productId: id });
+      await user.save();
+      res.status(200).json({
+        success: true,
+        message: "Product Added to wishlist",
+        user,
+      });
+    }
+  } else {
+    user.wishes.push({ productId: id });
+    await user.save();
+    res.status(200).json({
+      success: true,
+      message: "Product Added to wishlist",
+      user,
+    });
+  }
+});
+
+export const wishListProducts = catchAsyncError(async (req, res, next) => {
+  const products = [];
+  const { wishes } = await userModel
+    .findById({ _id: req.user.id })
+    .select("wishes");
+
+  for (const wish of wishes) {
+    const product = await ProductModel.findById({ _id: wish.productId });
+    if (product) {
+      products.push(product);
+    }
+  }
+  res.status(200).json({
+    products,
   });
 });

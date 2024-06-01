@@ -8,6 +8,7 @@ import {
   UpdateUserName,
   UserAdressDetails,
   UserAdressUpdate,
+  addToWish,
   defaultAddressUpdate,
   deleteUserAdress,
   emailotpsend,
@@ -26,6 +27,7 @@ import {
   userLogin,
   userLogout,
   userRegister,
+  wishListProducts,
 } from "../Controllers/userControllers.js";
 import { isAuthoriser } from "../Middlewares/auth.js";
 
@@ -56,6 +58,8 @@ userRoute.put("/user/me/update/password", isAuthoriser, UpdatePassword);
 userRoute.put("/user/me/forgot/password", ForgotPassword);
 userRoute.post("/user/me/payment", isAuthoriser, payment);
 userRoute.get("/user/me/paymentstatus/:id", isAuthoriser, paymentStatus);
+userRoute.get("/user/me/wish/products", isAuthoriser, wishListProducts);
+userRoute.get("/user/me/wish/:id", isAuthoriser, addToWish);
 getAllOrders;
 userRoute.put(
   "/user/me/defaultAddressUpdate",

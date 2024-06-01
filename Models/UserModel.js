@@ -39,6 +39,14 @@ const userSchema = new mongoose.Schema({
         "https://w7.pngwing.com/pngs/831/88/png-transparent-user-profile-computer-icons-user-interface-mystique-miscellaneous-user-interface-design-smile.png",
     },
   },
+  wishes: [
+    {
+      productId: {
+        type: mongoose.Schema.Types.ObjectId,
+        ref: "product",
+      },
+    },
+  ],
 });
 
 export const userModel = mongoose.model("user", userSchema);
