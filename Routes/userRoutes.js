@@ -57,7 +57,7 @@ userRoute.put("/user/me/update/phone", isAuthoriser, UpdatePhone);
 userRoute.put("/user/me/update/password", isAuthoriser, UpdatePassword);
 userRoute.put("/user/me/forgot/password", ForgotPassword);
 userRoute.post("/user/me/payment", isAuthoriser, payment);
-userRoute.get("/user/me/paymentstatus/:id", isAuthoriser, paymentStatus);
+userRoute.post("/user/me/paymentstatus/:id", isAuthoriser, paymentStatus);
 userRoute.get("/user/me/wish/products", isAuthoriser, wishListProducts);
 userRoute.get("/user/me/wish/:id", isAuthoriser, addToWish);
 getAllOrders;

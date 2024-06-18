@@ -561,45 +561,6 @@ export const payment = catchAsyncError(async (req, res, next) => {
     cancel_url: `${process.env.FRONTEND}/product/cart`,
   });
 
-  // create order in database
-  if (session.id) {
-    // shipping address
-    const shippingAddress = {
-      flatNo: deliveryAddress.flatNo,
-      area: deliveryAddress.area,
-      landmark: deliveryAddress.landmark,
-      city: deliveryAddress.city,
-      state: deliveryAddress.state,
-      country: deliveryAddress.country,
-      pinCode: deliveryAddress.pinCode,
-    };
-
-    let orderItems = [];
-    let totalAmount = 0;
-    const promise1 = products.forEach(async (element) => {
-      orderItems.push({
-        productId: element._id,
-        quantity: element.quantity,
-        baseAmount: element.productPrice * element.quantity,
-        productName: element.productName,
-        productDiscription: element.productDiscription,
-        images: element.images[0].url,
-        deliveryStatus: "Pending",
-      });
-      totalAmount = totalAmount + element.productPrice * element.quantity;
-    });
-
-    const promise2 = OrderModel.create({
-      userId: req.user._id,
-      orderItems,
-      totalAmount,
-      paymentStatus: session.payment_status,
-      onlineTransactionId: session.id,
-      shippingAddress,
-    });
-    await Promise.all([promise1, promise2]);
-  }
-
   res.status(200).json({
     success: true,
     id: session.id,
@@ -628,6 +589,53 @@ export const defaultAddressUpdate = catchAsyncError(async (req, res, next) => {
 
 export const paymentStatus = catchAsyncError(async (req, res, next) => {
   const { id } = req.params;
+  const { cart } = req.body;
+  const address = await AddressModle.find({ userId: req.user._id }).select(
+    "address"
+  );
+  const deliveryAddress = address[0].address.find(
+    (element) => element.defaultAddress === true
+  );
+
+  // create order in database
+  if (id) {
+    // shipping address
+    const shippingAddress = {
+      flatNo: deliveryAddress.flatNo,
+      area: deliveryAddress.area,
+      landmark: deliveryAddress.landmark,
+      city: deliveryAddress.city,
+      state: deliveryAddress.state,
+      country: deliveryAddress.country,
+      pinCode: deliveryAddress.pinCode,
+    };
+
+    let orderItems = [];
+    let totalAmount = 0;
+    const promise1 = cart.forEach(async (element) => {
+      orderItems.push({
+        productId: element._id,
+        quantity: element.quantity,
+        baseAmount: element.productPrice * element.quantity,
+        productName: element.productName,
+        productDiscription: element.productDiscription,
+        images: element.images[0].url,
+        deliveryStatus: "Pending",
+      });
+      totalAmount = totalAmount + element.productPrice * element.quantity;
+    });
+
+    const promise2 = OrderModel.create({
+      userId: req.user._id,
+      orderItems,
+      totalAmount,
+      paymentStatus: "unpaid",
+      onlineTransactionId: id,
+      shippingAddress,
+    });
+    await Promise.all([promise1, promise2]);
+  }
+
   const session = await StripeInstance.checkout.sessions.retrieve(id);
 
   if (session.payment_status === "paid") {
