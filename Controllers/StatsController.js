@@ -1,3 +1,4 @@
+import { cancleModle } from "../Models/CancleModel.js";
 import { OrderModel } from "../Models/OrderModle.js";
 import { ProductModel } from "../Models/ProductModel.js";
 import { userModel } from "../Models/UserModel.js";
@@ -372,5 +373,25 @@ export const PieChart = catchAsyncError(async (req, res, next) => {
   res.json({
     sucess: true,
     pieChartData,
+  });
+});
+
+export const cancle = catchAsyncError(async (req, res, next) => {
+  const today = new Date();
+  const previousdat = new Date(
+    today.getFullYear(),
+    today.getMonth(),
+    today.getDate() - 1
+  );
+  const cancleorder = await cancleModle.find({
+    createdAt: { $gte: previousdat, $lte: today },
+  });
+  const orders = await OrderModel.find({
+    createdAt: { $gte: previousdat, $lte: today },
+  });
+  res.status(200).json({
+    sucess: true,
+    numberofOrderCancledToday: cancleorder.length,
+    numberofOrdersToday: orders.length,
   });
 });

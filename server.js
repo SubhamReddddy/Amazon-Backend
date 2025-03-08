@@ -22,7 +22,7 @@ EventEmitter.defaultMaxListeners = 15; // or any number greater than the number 
 
 app.listen(process.env.PORT, () => {
   console.log(
-    `connected to the server || http://localhost:${process.env.PORT}/`
+    `connected to the server || http://localhost:${process.env.PORT}`
   );
 });
 

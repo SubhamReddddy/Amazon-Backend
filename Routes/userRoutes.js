@@ -9,6 +9,7 @@ import {
   UserAdressDetails,
   UserAdressUpdate,
   addToWish,
+  cancelOrderCon,
   defaultAddressUpdate,
   deleteUserAdress,
   emailotpsend,
@@ -60,6 +61,7 @@ userRoute.post("/user/me/payment", isAuthoriser, payment);
 userRoute.post("/user/me/paymentstatus/:id", isAuthoriser, paymentStatus);
 userRoute.get("/user/me/wish/products", isAuthoriser, wishListProducts);
 userRoute.get("/user/me/wish/:id", isAuthoriser, addToWish);
+userRoute.get("/user/me/orders/cancel/:id1/:id2", isAuthoriser, cancelOrderCon);
 getAllOrders;
 userRoute.put(
   "/user/me/defaultAddressUpdate",

@@ -13,6 +13,7 @@ import Stripe from "stripe";
 import { ProductModel } from "../Models/ProductModel.js";
 import { OrderModel } from "../Models/OrderModle.js";
 import { v2 as cloudinary } from "cloudinary";
+import { cancleModle } from "../Models/CancleModel.js";
 const StripeInstance = new Stripe(
   "sk_test_51PB8pqSCGPBJnNhBvbRAs2nI6u3B9g52D7Fq4CV8mdX3vrDEfSYPEa9RlG1sReAgqfVPGx4JOLIOdxji12KgBbvD00VuTlkbM4"
 );
@@ -55,18 +56,20 @@ export const mobileotpsend = catchAsyncError(async (req, res, next) => {
       numbers: [phoneno],
     };
     const SMS = await fast2Sms.sendMessage(options);
+    console.log(SMS);
+
     res.status(SMS.status_code || 200).json({
       success: SMS.return || false,
       message:
         (SMS.return ? SMS.message[0] : SMS.message) ||
         "Please try after some time!",
-      time: new Date(Date.now() + 1000 * 60 * 15).getTime(),
+      time: new Date(Date.now() + 1000 * 60 * 15 * 0).getTime(),
     });
 
     if (SMS.return) {
       const data = await MobileOtpModel.findOneAndUpdate(
         { phoneno },
-        { otp, expirytime: new Date(Date.now() + 1000 * 60 * 15) },
+        { otp, expirytime: new Date(Date.now() + 1000 * 60 * 15 * 0) },
         { upsert: true, new: true, setDefaultsOnInsert: true }
       );
     }
@@ -250,7 +253,7 @@ export const emailotpsend = catchAsyncError(async (req, res, next) => {
       from: process.env.SMPT_MAIL,
       to: email,
       subject: "Amazon verification code",
-      text: `your email verification code : \n ${otp}`,
+      text: `your email verification code :\n${otp}`,
     };
 
     await transporter.sendMail(mailOptions);
@@ -885,5 +888,30 @@ export const wishListProducts = catchAsyncError(async (req, res, next) => {
   }
   res.status(200).json({
     products,
+  });
+});
+
+export const cancelOrderCon = catchAsyncError(async (req, res, next) => {
+  const { id1, id2 } = req.params;
+
+  const order = await OrderModel.findById({ _id: id1 });
+
+  const { ObjectId } = mongoose.Types;
+  const id = new ObjectId(String(id2));
+
+  order.orderItems.forEach(async (item) => {
+    if (item._id.equals(id)) {
+      if (item.deliveryStatus !== "Cancelled") {
+        item.deliveryStatus = "Cancelled";
+        const data = await cancleModle.create({ orderId1: id1, orderId2: id2 });
+      }
+    }
+  });
+  await order.save();
+
+  res.status(200).json({
+    success: true,
+    message: "Order Cancelled Successfully",
+    order,
   });
 });
