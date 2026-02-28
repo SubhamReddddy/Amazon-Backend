@@ -15,7 +15,7 @@ import { OrderModel } from "../Models/OrderModle.js";
 import { v2 as cloudinary } from "cloudinary";
 import { cancleModle } from "../Models/CancleModel.js";
 const StripeInstance = new Stripe(
-  "sk_test_51PB8pqSCGPBJnNhBvbRAs2nI6u3B9g52D7Fq4CV8mdX3vrDEfSYPEa9RlG1sReAgqfVPGx4JOLIOdxji12KgBbvD00VuTlkbM4"
+  "sk_test_51PB8pqSCGPBJnNhBvbRAs2nI6u3B9g52D7Fq4CV8mdX3vrDEfSYPEa9RlG1sReAgqfVPGx4JOLIOdxji12KgBbvD00VuTlkbM4",
 );
 export const mobileotpsend = catchAsyncError(async (req, res, next) => {
   const { phoneno } = req.body;
@@ -33,7 +33,7 @@ export const mobileotpsend = catchAsyncError(async (req, res, next) => {
       update = false;
       return res.status(429).json({
         message: `please wait ${expiry.toFixed(
-          2
+          2,
         )} minutes before requesting another OTP!`,
         time: ifExist.expirytime.getTime(),
       });
@@ -70,7 +70,7 @@ export const mobileotpsend = catchAsyncError(async (req, res, next) => {
       const data = await MobileOtpModel.findOneAndUpdate(
         { phoneno },
         { otp, expirytime: new Date(Date.now() + 1000 * 60 * 15 * 0) },
-        { upsert: true, new: true, setDefaultsOnInsert: true }
+        { upsert: true, new: true, setDefaultsOnInsert: true },
       );
     }
   }
@@ -93,7 +93,7 @@ export const mobileotpsendAtForgotPassword = catchAsyncError(
         update = false;
         return res.status(429).json({
           message: `please wait ${expiry.toFixed(
-            2
+            2,
           )} minutes before requesting another OTP!`,
           time: ifExist.expirytime.getTime(),
         });
@@ -128,11 +128,11 @@ export const mobileotpsendAtForgotPassword = catchAsyncError(
         const data = await MobileOtpModel.findOneAndUpdate(
           { phoneno },
           { otp, expirytime: new Date(Date.now() + 1000 * 60 * 15) },
-          { upsert: true, new: true, setDefaultsOnInsert: true }
+          { upsert: true, new: true, setDefaultsOnInsert: true },
         );
       }
     }
-  }
+  },
 );
 
 export const mobileotpvarify = catchAsyncError(async (req, res, next) => {
@@ -161,9 +161,25 @@ export const mobileotpvarify = catchAsyncError(async (req, res, next) => {
 
 export const userRegister = catchAsyncError(async (req, res, next) => {
   const { username, phoneno, email, password } = req.body;
+
+  const isUserExistEmail = await userModel.findOne({ email });
+  if (isUserExistEmail) {
+    return next(
+      new ErrorHandler(
+        "A user already exists in the system with this email address!",
+        403,
+      ),
+    );
+  }
+
   const isUserExist = await userModel.findOne({ phoneno });
   if (isUserExist) {
-    return next(new ErrorHandler("User Allready Exist!", 403));
+    return next(
+      new ErrorHandler(
+        "A user already exists in the system with this phone number!",
+        403,
+      ),
+    );
   }
 
   const user = await userModel.create({ username, phoneno, email, password });
@@ -220,7 +236,7 @@ export const emailotpsend = catchAsyncError(async (req, res, next) => {
       update = false;
       return res.status(429).json({
         message: `please wait ${expiry.toFixed(
-          2
+          2,
         )} minutes before requesting another OTP!`,
         time: ifExist.expirytime.getTime(),
       });
@@ -238,7 +254,6 @@ export const emailotpsend = catchAsyncError(async (req, res, next) => {
       upperCaseAlphabets: false,
       specialChars: false,
     });
-
 
     const transporter = nodeMailer.createTransport({
       host: process.env.SMPT_HOST,
@@ -268,7 +283,7 @@ export const emailotpsend = catchAsyncError(async (req, res, next) => {
     const data = await EmailOtpModel.findOneAndUpdate(
       { email },
       { otp, expirytime: new Date(Date.now() + 1000 * 60 * 15) },
-      { upsert: true, new: true, setDefaultsOnInsert: true }
+      { upsert: true, new: true, setDefaultsOnInsert: true },
     );
   }
 });
@@ -520,7 +535,7 @@ export const payment = catchAsyncError(async (req, res, next) => {
   const products = data.cart;
   const { address } = data;
   const deliveryAddress = address.find(
-    (element) => element.defaultAddress === true
+    (element) => element.defaultAddress === true,
   );
 
   // creating line items
@@ -535,8 +550,8 @@ export const payment = catchAsyncError(async (req, res, next) => {
         },
         unit_amount: Number(
           (items.productPrice * 100 + items.productPrice * 100 * 0.28).toFixed(
-            2
-          )
+            2,
+          ),
         ),
       },
       quantity: items.quantity,
@@ -596,10 +611,10 @@ export const paymentStatus = catchAsyncError(async (req, res, next) => {
   const { id } = req.params;
   const { cart } = req.body;
   const address = await AddressModle.find({ userId: req.user._id }).select(
-    "address"
+    "address",
   );
   const deliveryAddress = address[0].address.find(
-    (element) => element.defaultAddress === true
+    (element) => element.defaultAddress === true,
   );
 
   // create order in database
@@ -746,7 +761,7 @@ export const AddReview = catchAsyncError(async (req, res, next) => {
     });
   } else {
     const isReviewed = product.rating.reviews.find((rev) =>
-      rev.userId.equals(req.user._id)
+      rev.userId.equals(req.user._id),
     );
     if (isReviewed) {
       product.rating.rate =
@@ -788,7 +803,7 @@ export const latestProducts = catchAsyncError(async (req, res, next) => {
   const thisMonthStart = new Date(
     thisMonthEnd.getFullYear(),
     thisMonthEnd.getMonth(),
-    1
+    1,
   );
 
   const products = await ProductModel.find({
